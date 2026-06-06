@@ -1,0 +1,31 @@
+[package]
+name    = "raxc-agent-memory"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "export-abi"
+path = "src/main.rs"
+required-features = ["export-abi"]
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+stylus-test = ["stylus-sdk/stylus-test"]
+
+[dev-dependencies]
+flate2 = "1"
+
+[dependencies]
+stylus-sdk       = { version = "0.10", features = [] }
+alloy-primitives = { version = "1", default-features = false, features = ["sha3-keccak"] }
+alloy-sol-types  = { version = "1", default-features = false }
+
+[profile.release]
+codegen-units = 1
+strip         = true
+lto           = true
+panic         = "abort"
+opt-level     = "z"
