@@ -1,5 +1,5 @@
 use alloc::{string::String, vec::Vec};
-use alloy_primitives::{Address, FixedBytes, U256, Uint, keccak256};
+use alloy_primitives::{Address, Bytes, FixedBytes, U256, Uint, keccak256};
 use alloy_sol_types::sol;
 use stylus_sdk::{prelude::*, storage::*};
 
@@ -9,20 +9,20 @@ type U64Val = Uint<64, 1>;
 // ── Events ────────────────────────────────────────────────────────────────────
 
 sol! {
-  event AuditCreated(
-    uint256 indexed task_id,
-    address indexed requester,
-    string  contract_name,
-    uint256 timestamp
-  );
+    event AuditCreated(
+        uint256 indexed task_id,
+        address indexed requester,
+        string  contract_name,
+        uint256 timestamp
+    );
 
-  event AuditFinalized(
-    uint256 indexed task_id,
-    uint8   risk_level,
-    uint64  confidence,
-    bytes32 report_hash,
-    uint256 timestamp
-  );
+    event AuditFinalized(
+        uint256 indexed task_id,
+        uint8   risk_level,
+        uint64  confidence,
+        bytes32 report_hash,
+        uint256 timestamp
+    );
 }
 
 // ── Storage ───────────────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ impl RaxcAuditReport {
     risk_level: u8,
     confidence: u64,
     vuln_type: String,
-    report_markdown: Vec<u8>,
+    report_markdown: Bytes,
   ) -> Result<(), Vec<u8>> {
     if self.created_at.get(task_id) == U256::ZERO {
       return Err(b"task not found".to_vec());
@@ -113,15 +113,15 @@ impl RaxcAuditReport {
   }
 
   /// Read the full markdown report bytes for a task.
-  pub fn get_report(&self, task_id: U256) -> Result<Vec<u8>, Vec<u8>> {
+  pub fn get_report(&self, task_id: U256) -> Result<Bytes, Vec<u8>> {
     if self.created_at.get(task_id) == U256::ZERO {
       return Err(b"task not found".to_vec());
     }
-    Ok(self.report_data.get(task_id).get_bytes())
+    Ok(Bytes::from(self.report_data.get(task_id).get_bytes()))
   }
 
   /// Returns true if the provided bytes match the stored keccak256 hash.
-  pub fn verify_report(&self, task_id: U256, report_markdown: Vec<u8>) -> bool {
+  pub fn verify_report(&self, task_id: U256, report_markdown: Bytes) -> bool {
     let stored: FixedBytes<32> = self.report_hash.get(task_id);
     let computed: FixedBytes<32> = keccak256(&report_markdown);
     stored == computed
@@ -183,7 +183,7 @@ mod tests {
     let task_id = contract.create_audit("DeFiVault".to_string()).unwrap();
     let report = b"# Audit Report\n**Vulnerability:** Reentrancy".to_vec();
     contract
-      .finalize_audit(task_id, 4, 87, "Reentrancy".to_string(), report.clone())
+      .finalize_audit(task_id, 4, 87, "Reentrancy".to_string(), report.clone().into())
       .unwrap();
     assert!(contract.is_finalized(task_id));
     assert_eq!(contract.get_risk_level(task_id), 4);
@@ -197,10 +197,10 @@ mod tests {
     let task_id = contract.create_audit("TokenPool".to_string()).unwrap();
     let report = b"# Report".to_vec();
     contract
-      .finalize_audit(task_id, 3, 75, "Flash Loan".to_string(), report.clone())
+      .finalize_audit(task_id, 3, 75, "Flash Loan".to_string(), report.clone().into())
       .unwrap();
-    assert!(contract.verify_report(task_id, report.clone()));
-    assert!(!contract.verify_report(task_id, b"tampered".to_vec()));
+    assert!(contract.verify_report(task_id, report.clone().into()));
+    assert!(!contract.verify_report(task_id, b"tampered".to_vec().into()));
   }
 
   #[test]
@@ -209,11 +209,11 @@ mod tests {
     let task_id = contract.create_audit("Vault".to_string()).unwrap();
     let report = b"report".to_vec();
     contract
-      .finalize_audit(task_id, 1, 50, "None".to_string(), report.clone())
+      .finalize_audit(task_id, 1, 50, "None".to_string(), report.clone().into())
       .unwrap();
     assert!(
       contract
-        .finalize_audit(task_id, 1, 50, "None".to_string(), report)
+        .finalize_audit(task_id, 1, 50, "None".to_string(), report.into())
         .is_err()
     );
   }
@@ -224,7 +224,7 @@ mod tests {
     let task_id = contract.create_audit("Vault".to_string()).unwrap();
     assert!(
       contract
-        .finalize_audit(task_id, 1, 101, "None".to_string(), b"r".to_vec())
+        .finalize_audit(task_id, 1, 101, "None".to_string(), b"r".to_vec().into())
         .is_err()
     );
   }
@@ -260,10 +260,10 @@ mod tests {
 
     let task_id = contract.create_audit("DeFiVault".to_string()).unwrap();
     contract
-      .finalize_audit(task_id, 4, 87, "Reentrancy".to_string(), compressed.clone())
+      .finalize_audit(task_id, 4, 87, "Reentrancy".to_string(), compressed.clone().into())
       .unwrap();
 
-    assert!(contract.verify_report(task_id, compressed.clone()));
+    assert!(contract.verify_report(task_id, compressed.clone().into()));
     let downloaded = contract.get_report(task_id).unwrap();
     assert_eq!(downloaded, compressed);
     let restored = decompress(&downloaded);
