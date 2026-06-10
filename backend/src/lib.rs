@@ -19,7 +19,7 @@ pub mod tools;
 pub mod qdrant_storage;
 pub mod stylus_client;
 pub use agent::{
-  Agent, AgentConfig, AgentOutput, Tool, RaxcAnalyzer, RaxcAnalyzerRemote, ToolSignal, DecisionResult,
+  Tool, RaxcAnalyzer, RaxcAnalyzerRemote, ToolSignal, DecisionResult,
   // Multi-Agent Framework
   ToolRegistry, AgentVote, ConsensusEngine, MemoryLayer, AgentCore,
   AnalysisResult, ReportEngine,
