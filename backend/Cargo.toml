@@ -23,17 +23,17 @@ exclude = [
 [lib]
 path = "src/lib.rs"
 
-[[bin]]
-name = "api"
-path = "src/api.rs"
+# [[bin]]
+# name = "api"
+# path = "src/api.rs"
 
-[[bin]]
-name = "api_step9_9"
-path = "src/api_step9_9.rs"
+# [[bin]]
+# name = "api_step9_9"
+# path = "src/api_step9_9.rs"
 
-[[bin]]
-name = "api_0g_storage"
-path = "src/api_0g_storage.rs"
+# [[bin]]
+# name = "api_0g_storage"
+# path = "src/api_0g_storage.rs"
 
 [dependencies]
 tokio          = { version = "1",    features = ["full"] }
@@ -55,4 +55,4 @@ async-trait    = "0.1"
 futures        = "0.3"
 md5            = "0.7"
 qdrant-client  = "1"
-
+alloy          = { version = "1", features = ["full"] }
