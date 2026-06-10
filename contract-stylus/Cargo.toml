@@ -1,3 +1,0 @@
-[workspace]
-members = ["audit-report", "agent-memory"]
-resolver = "2"

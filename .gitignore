@@ -9,3 +9,4 @@ datasets-case-exploit
 node_modules
 Winner*/
 data
+*.txt

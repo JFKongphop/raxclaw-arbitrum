@@ -1,4 +1,0 @@
-{
-  "rust-analyzer.cargo.features": ["stylus-test"],
-  "rust-analyzer.cargo.target": "aarch64-apple-darwin"
-}
