@@ -1,10 +1,10 @@
 use stylus_sdk::{alloy_primitives::U256, prelude::*};
 
 sol_storage! {
-  #[entrypoint]
-  pub struct Counter {
-    uint256 number;
-  }
+    #[entrypoint]
+    pub struct Counter {
+        uint256 number;
+    }
 }
 
 #[public]
