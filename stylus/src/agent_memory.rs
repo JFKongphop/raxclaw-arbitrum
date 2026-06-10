@@ -1,23 +1,23 @@
 use alloc::{string::String, vec::Vec};
-use alloy_primitives::{Address, FixedBytes, U256, keccak256};
+use alloy_primitives::{Address, Bytes, FixedBytes, U256, keccak256};
 use alloy_sol_types::sol;
 use stylus_sdk::{prelude::*, storage::*};
 
 // ── Events ────────────────────────────────────────────────────────────────────
 
 sol! {
-  event AgentMinted(
-    uint256 indexed token_id,
-    address indexed owner,
-    address indexed agent
-  );
+    event AgentMinted(
+        uint256 indexed token_id,
+        address indexed owner,
+        address indexed agent
+    );
 
-  event MemoryPushed(
-    uint256 indexed token_id,
-    uint256 indexed entry_index,
-    bytes32 content_hash,
-    uint256 timestamp
-  );
+    event MemoryPushed(
+        uint256 indexed token_id,
+        uint256 indexed entry_index,
+        bytes32 content_hash,
+        uint256 timestamp
+    );
 }
 
 // ── Storage ───────────────────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ impl RaxcAgentMemory {
   pub fn push_memory(
     &mut self,
     token_id: U256,
-    summary_json: Vec<u8>,
+    summary_json: Bytes,
     description: String,
   ) -> Result<(), Vec<u8>> {
     let owner = self.token_owner.get(token_id);
@@ -108,9 +108,9 @@ impl RaxcAgentMemory {
   }
 
   /// Read a single memory entry's JSON bytes by index.
-  pub fn get_memory_data(&self, token_id: U256, index: U256) -> Result<Vec<u8>, Vec<u8>> {
+  pub fn get_memory_data(&self, token_id: U256, index: U256) -> Result<Bytes, Vec<u8>> {
     self.check_bounds(token_id, index)?;
-    Ok(self.mem_data.get(entry_key(token_id, index)).get_bytes())
+    Ok(Bytes::from(self.mem_data.get(entry_key(token_id, index)).get_bytes()))
   }
 
   /// Read a single memory entry's keccak256 hash by index.
@@ -126,7 +126,7 @@ impl RaxcAgentMemory {
   }
 
   /// Verify a memory entry's integrity.
-  pub fn verify_memory(&self, token_id: U256, index: U256, data: Vec<u8>) -> bool {
+  pub fn verify_memory(&self, token_id: U256, index: U256, data: Bytes) -> bool {
     if self.check_bounds(token_id, index).is_err() {
       return false;
     }
@@ -212,7 +212,7 @@ mod tests {
     vm.set_sender(agent());
     let json = b"{\"vuln\":\"Reentrancy\"}".to_vec();
     contract
-      .push_memory(token_id, json.clone(), "Audit: DeFiVault".to_string())
+      .push_memory(token_id, json.clone().into(), "Audit: DeFiVault".to_string())
       .unwrap();
     assert_eq!(contract.memory_count(token_id), U256::from(1u8));
     assert_eq!(
@@ -228,10 +228,10 @@ mod tests {
     vm.set_sender(agent());
     let json = b"{\"risk\":\"Critical\"}".to_vec();
     contract
-      .push_memory(token_id, json.clone(), "desc".to_string())
+      .push_memory(token_id, json.clone().into(), "desc".to_string())
       .unwrap();
-    assert!(contract.verify_memory(token_id, U256::ZERO, json.clone()));
-    assert!(!contract.verify_memory(token_id, U256::ZERO, b"tampered".to_vec()));
+    assert!(contract.verify_memory(token_id, U256::ZERO, json.clone().into()));
+    assert!(!contract.verify_memory(token_id, U256::ZERO, b"tampered".to_vec().into()));
   }
 
   #[test]
@@ -241,7 +241,7 @@ mod tests {
     vm.set_sender(Address::from([0x99u8; 20]));
     assert!(
       contract
-        .push_memory(token_id, b"data".to_vec(), "d".to_string())
+        .push_memory(token_id, b"data".to_vec().into(), "d".to_string())
         .is_err()
     );
   }
@@ -254,7 +254,7 @@ mod tests {
     for i in 0..3u8 {
       let json = alloc::format!("{{\"entry\":{}}}", i).into_bytes();
       contract
-        .push_memory(token_id, json, alloc::format!("entry {}", i))
+        .push_memory(token_id, json.into(), alloc::format!("entry {}", i))
         .unwrap();
     }
     assert_eq!(contract.memory_count(token_id), U256::from(3u8));
@@ -294,12 +294,12 @@ mod tests {
     contract
       .push_memory(
         token_id,
-        compressed.clone(),
+        compressed.clone().into(),
         "RAXC Audit: DeFiVault 2026-06-01".to_string(),
       )
       .unwrap();
 
-    assert!(contract.verify_memory(token_id, U256::ZERO, compressed.clone()));
+    assert!(contract.verify_memory(token_id, U256::ZERO, compressed.clone().into()));
     let downloaded = contract.get_memory_data(token_id, U256::ZERO).unwrap();
     assert_eq!(downloaded, compressed);
     let restored = decompress(&downloaded);
