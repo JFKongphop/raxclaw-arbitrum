@@ -1,6 +1,6 @@
 use alloy::{
   network::EthereumWallet,
-  primitives::{Address, FixedBytes, U256, address},
+  primitives::{U256, address},
   providers::ProviderBuilder,
   signers::local::PrivateKeySigner,
   sol,
@@ -23,7 +23,7 @@ sol! {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-  dotenvy::from_path("../../.env").ok();
+  dotenvy::from_path("../.env").ok();
 
   let rpc_url = std::env::var("ARBITRUM_SEPOLIA").expect("ARBITRUM_SEPOLIA must be set in .env");
   let private_key = std::env::var("PRIVATE_KEY").expect("PRIVATE_KEY must be set in .env");
@@ -36,9 +36,7 @@ async fn main() -> anyhow::Result<()> {
     .connect(&rpc_url)
     .await?;
 
-  // Replace with your deployed AgentMemory address.
-  // Deploy with: cargo stylus deploy --features agent-memory --no-verify --max-fee-per-gas-gwei 0.1 ...
-  let addr = address!("def586e63cf2f20cbe9f055b738cd4ceda273900");
+  let addr = address!("4dd833d6e078b053beff3874ff6e4a93549a25e7");
   let contract = IAgentMemory::new(addr, &provider);
 
   println!("=== AgentMemory ({addr}) ===");

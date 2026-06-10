@@ -29,7 +29,7 @@ sol! {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-  dotenvy::from_path("../../.env").ok();
+  dotenvy::from_path("../.env").ok();
 
   let rpc_url = std::env::var("ARBITRUM_SEPOLIA").expect("ARBITRUM_SEPOLIA must be set in .env");
   let private_key = std::env::var("PRIVATE_KEY").expect("PRIVATE_KEY must be set in .env");
@@ -41,9 +41,7 @@ async fn main() -> anyhow::Result<()> {
     .connect(&rpc_url)
     .await?;
 
-  // Replace with your deployed AuditReport address.
-  // Deploy with: cargo stylus deploy --features audit-report --no-verify --max-fee-per-gas-gwei 0.1 ...
-  let addr = address!("6c46b355a1178e2e9f8c5c2d8dab81e061d67434");
+  let addr = address!("1074fb96d4e092f8d2bd88474052898e96ee06f4");
   let contract = IAuditReport::new(addr, &provider);
 
   println!("=== AuditReport ({addr}) ===");

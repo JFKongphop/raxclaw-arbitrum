@@ -20,7 +20,7 @@ sol! {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-  dotenvy::from_path("../../.env").ok();
+  dotenvy::from_path("../.env").ok();
 
   let rpc_url = std::env::var("ARBITRUM_SEPOLIA").expect("ARBITRUM_SEPOLIA must be set in .env");
   let private_key = std::env::var("PRIVATE_KEY").expect("PRIVATE_KEY must be set in .env");
