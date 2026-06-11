@@ -15,32 +15,60 @@ use std::path::Path;
 
 mod agent;
 mod openai_client;
-pub mod tools;
 pub mod qdrant_storage;
 pub mod stylus_client;
+pub mod tools;
 pub use agent::{
-  Tool, RaxcAnalyzer, RaxcAnalyzerRemote, ToolSignal, DecisionResult,
-  // Multi-Agent Framework
-  ToolRegistry, AgentVote, ConsensusEngine, MemoryLayer, AgentCore,
-  AnalysisResult, ReportEngine,
-  // Production Hardening
-  SignalNormalizer, SeverityLock,
-  // Intelligence + Scoring Layer
-  IntelligenceReport, RiskScoringEngine, ToolTrustWeighting, ExploitabilityEstimator,
+  AgentCore,
+  AgentVote,
+  AnalysisResult,
   // Attack Simulation + Deterministic Exploit Execution Engine
-  AttackSimulation, StateTransition, AttackerModel, ExploitVerdict, AttackSimulationEngine,
-  DeterministicReplay, ExploitGraph, AttackerPersona, AttackerCapabilities,
-  ConfidenceEngine, ExecutionStep, ToolSignalReference, AttackSuccessProbability, StateProof, SeverityProof,
+  AttackSimulation,
+  AttackSimulationEngine,
+  AttackSuccessProbability,
+  AttackerCapabilities,
+  AttackerModel,
+  AttackerPersona,
+  ConfidenceEngine,
+  ConsensusEngine,
+  DecisionResult,
+  DeterministicReplay,
+  ExecutionStep,
+  ExploitGraph,
+  ExploitVerdict,
+  ExploitabilityEstimator,
+  // Intelligence + Scoring Layer
+  IntelligenceReport,
+  MemoryLayer,
+  RaxcAnalyzer,
+  RaxcAnalyzerRemote,
+  ReportEngine,
+  RiskScoringEngine,
+  SeverityLock,
+  SeverityProof,
+  // Production Hardening
+  SignalNormalizer,
+  StateProof,
+  StateTransition,
+  Tool,
+  // Multi-Agent Framework
+  ToolRegistry,
+  ToolSignal,
+  ToolSignalReference,
+  ToolTrustWeighting,
 };
 pub use openai_client::OpenAiClient;
-pub use qdrant_storage::{QdrantStorageClient, QdrantExploitResult};
+pub use qdrant_storage::{QdrantExploitResult, QdrantStorageClient};
 pub use stylus_client::StylusClient;
-pub use tools::{GasAnalyzerTool, PatternDetectorTool, FlashLoanTool, AccessControlTool, ReflectionTool, MemoryTool};
+pub use tools::{
+  AccessControlTool, FlashLoanTool, GasAnalyzerTool, MemoryTool, PatternDetectorTool,
+  ReflectionTool,
+};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 pub const TOP_K: usize = 5;
-pub const SIM_THRESHOLD: f64 = 0.01;  // Lowered to always trigger analysis even with poor similarity
+pub const SIM_THRESHOLD: f64 = 0.01; // Lowered to always trigger analysis even with poor similarity
 
 // ─── Environment setup ────────────────────────────────────────────────────────
 
@@ -104,7 +132,14 @@ async fn embed_openai(client: &Client, text: &str) -> Result<Vec<f64>> {
   }
 
   let embed_resp: EmbedResponse = resp.json().await?;
-  Ok(embed_resp.data.into_iter().next().map(|d| d.embedding).unwrap_or_default())
+  Ok(
+    embed_resp
+      .data
+      .into_iter()
+      .next()
+      .map(|d| d.embedding)
+      .unwrap_or_default(),
+  )
 }
 
 // ─── Analysis workflow ────────────────────────────────────────────────────────
@@ -127,7 +162,10 @@ pub async fn analyze_qdrant(
   println!("[RaxcAnalyzer]   Top similarity: {:.3}", top_score);
 
   if top_score < SIM_THRESHOLD {
-    println!("[!] Similarity {:.3} below threshold {} — skipping analysis, contract appears safe.", top_score, SIM_THRESHOLD);
+    println!(
+      "[!] Similarity {:.3} below threshold {} — skipping analysis, contract appears safe.",
+      top_score, SIM_THRESHOLD
+    );
     return Ok(format!(
       "✅ NO EXPLOITABLE VULNERABILITY FOUND\nTop similarity score ({:.3}) is below minimum threshold ({}).",
       top_score, SIM_THRESHOLD
@@ -207,7 +245,14 @@ pub fn build_rag_context_qdrant(top: &[qdrant_storage::QdrantExploitResult]) -> 
 
     let (tx_line, lost_line, type_line) = if is_real {
       (
-        format!("Attack Tx: {}", if e.attack_tx.is_empty() { "unknown" } else { &e.attack_tx }),
+        format!(
+          "Attack Tx: {}",
+          if e.attack_tx.is_empty() {
+            "unknown"
+          } else {
+            &e.attack_tx
+          }
+        ),
         format!("Total Lost: {}", e.total_lost),
         String::new(),
       )
@@ -223,12 +268,7 @@ pub fn build_rag_context_qdrant(top: &[qdrant_storage::QdrantExploitResult]) -> 
 
     ctx.push_str(&format!(
       "\n{}\nChain: {}\n{}\n{}\n{}Code Snippet:\n{}\n",
-      header,
-      e.chain,
-      lost_line,
-      tx_line,
-      type_line,
-      code,
+      header, e.chain, lost_line, tx_line, type_line, code,
     ));
   }
   ctx

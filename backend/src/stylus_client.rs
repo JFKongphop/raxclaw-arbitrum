@@ -46,27 +46,45 @@ impl StylusClient {
     Ok(Self {
       wallet,
       rpc_url: rpc,
-      agent_memory_addr: std::env::var("AGENT_MEMORY").context("AGENT_MEMORY not set")?.parse()?,
-      audit_report_addr: std::env::var("AUDIT_REPORT").context("AUDIT_REPORT not set")?.parse()?,
+      agent_memory_addr: std::env::var("AGENT_MEMORY")
+        .context("AGENT_MEMORY not set")?
+        .parse()?,
+      audit_report_addr: std::env::var("AUDIT_REPORT")
+        .context("AUDIT_REPORT not set")?
+        .parse()?,
       agent_token_id: U256::from_str(
-        &std::env::var("AGENT_TOKEN_ID").unwrap_or_else(|_| "0".to_string())
-      ).unwrap_or(U256::ZERO),
+        &std::env::var("AGENT_TOKEN_ID").unwrap_or_else(|_| "0".to_string()),
+      )
+      .unwrap_or(U256::ZERO),
     })
   }
 
   async fn connect(&self) -> anyhow::Result<impl alloy::providers::Provider> {
-    Ok(ProviderBuilder::new()
-      .wallet(self.wallet.clone())
-      .connect(&self.rpc_url)
-      .await?)
+    Ok(
+      ProviderBuilder::new()
+        .wallet(self.wallet.clone())
+        .connect(&self.rpc_url)
+        .await?,
+    )
   }
 
   pub async fn push_memory(&self, json: &str, desc: &str) -> anyhow::Result<String> {
     let provider = self.connect().await?;
     let c = IAgentMemory::new(self.agent_memory_addr, &provider);
-    let r = c.pushMemory(self.agent_token_id, json.as_bytes().to_vec().into(), desc.to_string())
-      .send().await?.get_receipt().await?;
-    println!("\x1b[94m[Memory]\x1b[0m         Pushed             | TX: 0x{:x}", r.transaction_hash);
+    let r = c
+      .pushMemory(
+        self.agent_token_id,
+        json.as_bytes().to_vec().into(),
+        desc.to_string(),
+      )
+      .send()
+      .await?
+      .get_receipt()
+      .await?;
+    println!(
+      "\x1b[94m[Memory]\x1b[0m         Pushed             | TX: 0x{:x}",
+      r.transaction_hash
+    );
     Ok(format!("0x{:x}", r.transaction_hash))
   }
 
@@ -76,7 +94,11 @@ impl StylusClient {
     let total = c.memoryCount(self.agent_token_id).call().await?;
     let mut entries = Vec::new();
     for i in 0..total.min(U256::from(50)).to::<u64>() {
-      if let Ok(bytes) = c.getMemoryData(self.agent_token_id, U256::from(i)).call().await {
+      if let Ok(bytes) = c
+        .getMemoryData(self.agent_token_id, U256::from(i))
+        .call()
+        .await
+      {
         entries.push((U256::from(i), String::from_utf8_lossy(&bytes).to_string()));
       }
     }
@@ -87,17 +109,45 @@ impl StylusClient {
     let provider = self.connect().await?;
     let c = IAuditReport::new(self.audit_report_addr, &provider);
     let current = c.recordCount().call().await?;
-    let r = c.createAudit(name.to_string()).send().await?.get_receipt().await?;
-    println!("\x1b[35m[AuditReport]\x1b[0m    Task #{} created   | TX: 0x{:x}", current, r.transaction_hash);
+    let r = c
+      .createAudit(name.to_string())
+      .send()
+      .await?
+      .get_receipt()
+      .await?;
+    println!(
+      "\x1b[35m[AuditReport]\x1b[0m    Task #{} created   | TX: 0x{:x}",
+      current, r.transaction_hash
+    );
     Ok(current)
   }
 
-  pub async fn finalize_audit(&self, tid: U256, risk: u8, conf: u64, vtype: &str, report: &str) -> anyhow::Result<String> {
+  pub async fn finalize_audit(
+    &self,
+    tid: U256,
+    risk: u8,
+    conf: u64,
+    vtype: &str,
+    report: &str,
+  ) -> anyhow::Result<String> {
     let provider = self.connect().await?;
     let c = IAuditReport::new(self.audit_report_addr, &provider);
-    let r = c.finalizeAudit(tid, risk, conf, vtype.to_string(), report.as_bytes().to_vec().into())
-      .send().await?.get_receipt().await?;
-    println!("\x1b[35m[AuditReport]\x1b[0m    Task #{} finalized | TX: 0x{:x}", tid, r.transaction_hash);
+    let r = c
+      .finalizeAudit(
+        tid,
+        risk,
+        conf,
+        vtype.to_string(),
+        report.as_bytes().to_vec().into(),
+      )
+      .send()
+      .await?
+      .get_receipt()
+      .await?;
+    println!(
+      "\x1b[35m[AuditReport]\x1b[0m    Task #{} finalized | TX: 0x{:x}",
+      tid, r.transaction_hash
+    );
     Ok(format!("0x{:x}", r.transaction_hash))
   }
 

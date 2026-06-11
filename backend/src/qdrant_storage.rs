@@ -84,19 +84,14 @@ impl QdrantStorageClient {
   /// Create a new client from env vars.
   /// Reads QDRANT_ENDPOINT and QDRANT_API_KEY from environment.
   pub fn from_env() -> Result<Self> {
-    let endpoint = std::env::var("QDRANT_ENDPOINT")
-      .context("QDRANT_ENDPOINT not set in .env")?;
-    let api_key = std::env::var("QDRANT_API_KEY")
-      .context("QDRANT_API_KEY not set in .env")?;
+    let endpoint = std::env::var("QDRANT_ENDPOINT").context("QDRANT_ENDPOINT not set in .env")?;
+    let api_key = std::env::var("QDRANT_API_KEY").context("QDRANT_API_KEY not set in .env")?;
 
     Ok(Self {
       endpoint: endpoint.trim_end_matches('/').to_string(),
       api_key,
       http: reqwest::Client::new(),
-      collections: vec![
-        "defi_cases".to_string(),
-        "defi_protocols".to_string(),
-      ],
+      collections: vec!["defi_cases".to_string(), "defi_protocols".to_string()],
     })
   }
 
@@ -106,10 +101,7 @@ impl QdrantStorageClient {
       endpoint: endpoint.trim_end_matches('/').to_string(),
       api_key,
       http: reqwest::Client::new(),
-      collections: vec![
-        "defi_cases".to_string(),
-        "defi_protocols".to_string(),
-      ],
+      collections: vec!["defi_cases".to_string(), "defi_protocols".to_string()],
     }
   }
 
@@ -137,13 +129,23 @@ impl QdrantStorageClient {
 
       match resp {
         Ok(r) if r.status().is_success() => {
-          let data: SearchResponse = r.json().await
-            .with_context(|| format!("Failed to parse Qdrant response for collection '{}'", collection))?;
+          let data: SearchResponse = r.json().await.with_context(|| {
+            format!(
+              "Failed to parse Qdrant response for collection '{}'",
+              collection
+            )
+          })?;
 
           for point in data.result {
             let payload = point.payload.unwrap_or(ExploitPayload {
-              exploit_name: None, vuln_type: None, chain: None, date: None,
-              total_lost: None, source: None, code_snippet: None, attack_tx: None,
+              exploit_name: None,
+              vuln_type: None,
+              chain: None,
+              date: None,
+              total_lost: None,
+              source: None,
+              code_snippet: None,
+              attack_tx: None,
               embedding_dim: None,
             });
 
@@ -167,17 +169,26 @@ impl QdrantStorageClient {
           let body = r.text().await.unwrap_or_default();
           eprintln!(
             "[Qdrant]   Collection '{}' search returned {}: {}",
-            collection, status, &body[..body.len().min(200)]
+            collection,
+            status,
+            &body[..body.len().min(200)]
           );
         }
         Err(e) => {
-          eprintln!("[Qdrant]   Collection '{}' request failed: {}", collection, e);
+          eprintln!(
+            "[Qdrant]   Collection '{}' request failed: {}",
+            collection, e
+          );
         }
       }
     }
 
     // Sort by score descending, take top_k
-    all_results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    all_results.sort_by(|a, b| {
+      b.score
+        .partial_cmp(&a.score)
+        .unwrap_or(std::cmp::Ordering::Equal)
+    });
     all_results.truncate(top_k);
 
     println!(
@@ -220,9 +231,7 @@ impl QdrantStorageClient {
         .await
       {
         if let Ok(data) = r.json::<serde_json::Value>().await {
-          total_points += data["result"]["points_count"]
-            .as_u64()
-            .unwrap_or(0) as usize;
+          total_points += data["result"]["points_count"].as_u64().unwrap_or(0) as usize;
         }
       }
     }

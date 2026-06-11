@@ -45,10 +45,8 @@ struct ChatCompletionResponse {
 impl OpenAiClient {
   /// Create from env vars: OPENAI_API_KEY + OPENAI_MODEL (defaults to gpt-4o-mini).
   pub fn from_env() -> Result<Self> {
-    let api_key = std::env::var("OPENAI_API_KEY")
-      .context("OPENAI_API_KEY not set in .env")?;
-    let model = std::env::var("OPENAI_MODEL")
-      .unwrap_or_else(|_| "gpt-4o-mini".to_string());
+    let api_key = std::env::var("OPENAI_API_KEY").context("OPENAI_API_KEY not set in .env")?;
+    let model = std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string());
 
     Ok(Self {
       endpoint: "https://api.openai.com/v1/chat/completions".to_string(),
@@ -76,7 +74,11 @@ impl OpenAiClient {
   }
 
   /// Run inference with custom max_tokens parameter.
-  pub async fn infer_with_max_tokens(&self, prompt: &str, max_tokens: Option<u32>) -> Result<String> {
+  pub async fn infer_with_max_tokens(
+    &self,
+    prompt: &str,
+    max_tokens: Option<u32>,
+  ) -> Result<String> {
     let req = ChatCompletionRequest {
       model: self.model.clone(),
       messages: vec![

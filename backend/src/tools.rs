@@ -14,7 +14,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use crate::agent::{Tool, ToolSignal, MemoryLayer};
+use crate::agent::{MemoryLayer, Tool, ToolSignal};
 use crate::openai_client::OpenAiClient;
 
 // ─── Gas Analyzer Tool ────────────────────────────────────────────────────────
@@ -43,11 +43,14 @@ impl Tool for GasAnalyzerTool {
     }
 
     if contract.contains("public ") && contract.contains("returns") {
-      findings.push("⛽ Gas: Consider using 'external' instead of 'public' for external-only functions");
+      findings
+        .push("⛽ Gas: Consider using 'external' instead of 'public' for external-only functions");
     }
 
     if contract.contains("string memory") || contract.contains("bytes memory") {
-      findings.push("⛽ Gas: Dynamic types in memory can be expensive - consider calldata for read-only params");
+      findings.push(
+        "⛽ Gas: Dynamic types in memory can be expensive - consider calldata for read-only params",
+      );
     }
 
     if contract.contains("storage") && contract.contains("memory") {
@@ -60,7 +63,11 @@ impl Tool for GasAnalyzerTool {
       format!(
         "**Gas Analysis:**\n\nFound {} potential gas optimizations:\n\n{}",
         findings.len(),
-        findings.iter().map(|f| format!("- {}", f)).collect::<Vec<_>>().join("\n")
+        findings
+          .iter()
+          .map(|f| format!("- {}", f))
+          .collect::<Vec<_>>()
+          .join("\n")
       )
     };
 
@@ -70,7 +77,7 @@ impl Tool for GasAnalyzerTool {
       tool_name: "GasAnalyzerTool".to_string(),
       vulnerability: None,
       severity: None,
-      confidence: 0.60,  // Lower confidence since gas != security
+      confidence: 0.60, // Lower confidence since gas != security
       evidence,
     })
   }
@@ -103,10 +110,12 @@ impl Tool for PatternDetectorTool {
       if let Some(idx) = contract.find(".call") {
         let before = &contract[..idx];
         let after = &contract[idx..];
-        
+
         // Check if state update happens after the call
         if after.contains("=") && !before.contains("nonReentrant") {
-          patterns.push("🚨 Pattern: External call detected - check for reentrancy (CEI pattern required)");
+          patterns.push(
+            "🚨 Pattern: External call detected - check for reentrancy (CEI pattern required)",
+          );
           vulnerability_type = Some("Reentrancy".to_string());
           severity = Some("High".to_string());
         }
@@ -115,7 +124,8 @@ impl Tool for PatternDetectorTool {
 
     // Unchecked return value
     if contract.contains(".transfer(") || contract.contains(".send(") {
-      patterns.push("⚠️  Pattern: Using transfer/send - consider using call with return value check");
+      patterns
+        .push("⚠️  Pattern: Using transfer/send - consider using call with return value check");
       if vulnerability_type.is_none() {
         vulnerability_type = Some("Unchecked Return Value".to_string());
         severity = Some("Medium".to_string());
@@ -133,7 +143,8 @@ impl Tool for PatternDetectorTool {
 
     // tx.origin usage
     if contract.contains("tx.origin") {
-      patterns.push("🚨 Pattern: tx.origin detected - vulnerable to phishing attacks (use msg.sender)");
+      patterns
+        .push("🚨 Pattern: tx.origin detected - vulnerable to phishing attacks (use msg.sender)");
       if vulnerability_type.is_none() {
         vulnerability_type = Some("Access Control".to_string());
         severity = Some("High".to_string());
@@ -142,7 +153,9 @@ impl Tool for PatternDetectorTool {
 
     // Timestamp dependence
     if contract.contains("block.timestamp") || contract.contains("now") {
-      patterns.push("⚠️  Pattern: Timestamp usage detected - can be manipulated by miners (15-second window)");
+      patterns.push(
+        "⚠️  Pattern: Timestamp usage detected - can be manipulated by miners (15-second window)",
+      );
       if vulnerability_type.is_none() {
         vulnerability_type = Some("Timestamp Dependence".to_string());
         severity = Some("Medium".to_string());
@@ -159,8 +172,13 @@ impl Tool for PatternDetectorTool {
     // Integer overflow (if old Solidity)
     if contract.contains("pragma solidity") {
       if let Some(version_line) = contract.lines().find(|l| l.contains("pragma solidity")) {
-        if version_line.contains("^0.7") || version_line.contains("^0.6") || version_line.contains("^0.5") {
-          if !contract.contains("SafeMath") && (contract.contains("+=") || contract.contains("-=") || contract.contains("*=")) {
+        if version_line.contains("^0.7")
+          || version_line.contains("^0.6")
+          || version_line.contains("^0.5")
+        {
+          if !contract.contains("SafeMath")
+            && (contract.contains("+=") || contract.contains("-=") || contract.contains("*="))
+          {
             patterns.push("⚠️  Pattern: Arithmetic operations in Solidity <0.8 without SafeMath - overflow risk");
             if vulnerability_type.is_none() {
               vulnerability_type = Some("Integer Overflow".to_string());
@@ -177,14 +195,18 @@ impl Tool for PatternDetectorTool {
       format!(
         "**Pattern Analysis:**\n\nDetected {} vulnerability patterns:\n\n{}",
         patterns.len(),
-        patterns.iter().map(|p| format!("- {}", p)).collect::<Vec<_>>().join("\n")
+        patterns
+          .iter()
+          .map(|p| format!("- {}", p))
+          .collect::<Vec<_>>()
+          .join("\n")
       )
     };
 
     let confidence = if vulnerability_type.is_some() {
-      0.70  // Pattern matching has decent confidence
+      0.70 // Pattern matching has decent confidence
     } else {
-      0.50  // No vulnerability detected
+      0.50 // No vulnerability detected
     };
 
     Ok(ToolSignal {
@@ -221,15 +243,22 @@ impl Tool for FlashLoanTool {
     let mut severity = None;
 
     // Flash loan callback patterns
-    if contract.contains("flashLoan") || contract.contains("flash_loan") || contract.contains("executeOperation") {
+    if contract.contains("flashLoan")
+      || contract.contains("flash_loan")
+      || contract.contains("executeOperation")
+    {
       findings.push("🚨 FlashLoan: Flash loan callback detected — verify state is not manipulable within single tx");
       vulnerability_type = Some("Flash Loan".to_string());
       severity = Some("Critical".to_string());
     }
 
     // Price oracle relying on spot balanceOf (manipulable in single tx)
-    if (contract.contains("balanceOf") || contract.contains("getReserves")) && contract.contains("price") {
-      findings.push("🚨 FlashLoan: Spot price oracle detected — use TWAP to prevent single-block manipulation");
+    if (contract.contains("balanceOf") || contract.contains("getReserves"))
+      && contract.contains("price")
+    {
+      findings.push(
+        "🚨 FlashLoan: Spot price oracle detected — use TWAP to prevent single-block manipulation",
+      );
       if vulnerability_type.is_none() {
         vulnerability_type = Some("Price Oracle Manipulation".to_string());
         severity = Some("Critical".to_string());
@@ -246,8 +275,11 @@ impl Tool for FlashLoanTool {
     }
 
     // Borrow + operation in same function
-    if contract.contains("borrow") && (contract.contains("swap") || contract.contains("liquidate")) {
-      findings.push("⚠️  FlashLoan: Borrow + swap/liquidate in same call — verify flash loan atomicity guard");
+    if contract.contains("borrow") && (contract.contains("swap") || contract.contains("liquidate"))
+    {
+      findings.push(
+        "⚠️  FlashLoan: Borrow + swap/liquidate in same call — verify flash loan atomicity guard",
+      );
       if vulnerability_type.is_none() {
         vulnerability_type = Some("Flash Loan".to_string());
         severity = Some("High".to_string());
@@ -260,11 +292,19 @@ impl Tool for FlashLoanTool {
       format!(
         "**Flash Loan Analysis:**\n\nFound {} flash loan / oracle risk(s):\n\n{}",
         findings.len(),
-        findings.iter().map(|f| format!("- {}", f)).collect::<Vec<_>>().join("\n")
+        findings
+          .iter()
+          .map(|f| format!("- {}", f))
+          .collect::<Vec<_>>()
+          .join("\n")
       )
     };
 
-    let confidence = if vulnerability_type.is_some() { 0.82 } else { 0.55 };
+    let confidence = if vulnerability_type.is_some() {
+      0.82
+    } else {
+      0.55
+    };
 
     Ok(ToolSignal {
       id: "FlashLoanTool#1".to_string(),
@@ -300,13 +340,27 @@ impl Tool for AccessControlTool {
     let mut severity = None;
 
     // Unprotected critical functions
-    let critical_fn_patterns = ["withdraw", "transferOwnership", "upgradeTo", "mint", "burn", "setOwner", "initialize"];
+    let critical_fn_patterns = [
+      "withdraw",
+      "transferOwnership",
+      "upgradeTo",
+      "mint",
+      "burn",
+      "setOwner",
+      "initialize",
+    ];
     for fname in &critical_fn_patterns {
       if contract.contains(&format!("function {}", fname)) {
         let fn_idx = contract.find(&format!("function {}", fname)).unwrap_or(0);
         let fn_body = &contract[fn_idx..std::cmp::min(fn_idx + 300, contract.len())];
-        if !fn_body.contains("onlyOwner") && !fn_body.contains("require(msg.sender") && !fn_body.contains("onlyRole") {
-          findings.push(format!("🚨 AccessControl: `{}()` has no owner/role guard — callable by anyone", fname));
+        if !fn_body.contains("onlyOwner")
+          && !fn_body.contains("require(msg.sender")
+          && !fn_body.contains("onlyRole")
+        {
+          findings.push(format!(
+            "🚨 AccessControl: `{}()` has no owner/role guard — callable by anyone",
+            fname
+          ));
           vulnerability_type = Some("Access Control".to_string());
           severity = Some("Critical".to_string());
         }
@@ -314,8 +368,14 @@ impl Tool for AccessControlTool {
     }
 
     // Ownership renounced without timelock
-    if contract.contains("renounceOwnership") && !contract.contains("timelock") && !contract.contains("TimeLock") {
-      findings.push("⚠️  AccessControl: renounceOwnership without timelock — irreversible ownership loss".to_string());
+    if contract.contains("renounceOwnership")
+      && !contract.contains("timelock")
+      && !contract.contains("TimeLock")
+    {
+      findings.push(
+        "⚠️  AccessControl: renounceOwnership without timelock — irreversible ownership loss"
+          .to_string(),
+      );
       if vulnerability_type.is_none() {
         vulnerability_type = Some("Access Control".to_string());
         severity = Some("High".to_string());
@@ -323,15 +383,23 @@ impl Tool for AccessControlTool {
     }
 
     // Initializer without initializer guard
-    if contract.contains("function initialize") && !contract.contains("initializer") && !contract.contains("_initialized") {
-      findings.push("🚨 AccessControl: initialize() without initializer guard — can be called multiple times".to_string());
+    if contract.contains("function initialize")
+      && !contract.contains("initializer")
+      && !contract.contains("_initialized")
+    {
+      findings.push(
+        "🚨 AccessControl: initialize() without initializer guard — can be called multiple times"
+          .to_string(),
+      );
       vulnerability_type = Some("Access Control".to_string());
       severity = Some("Critical".to_string());
     }
 
     // Public setter with no access check
     if contract.contains("function set") {
-      let has_any_guard = contract.contains("onlyOwner") || contract.contains("require(msg.sender") || contract.contains("onlyRole");
+      let has_any_guard = contract.contains("onlyOwner")
+        || contract.contains("require(msg.sender")
+        || contract.contains("onlyRole");
       if !has_any_guard {
         findings.push("⚠️  AccessControl: setter functions detected with no access control pattern found in contract".to_string());
         if vulnerability_type.is_none() {
@@ -347,11 +415,19 @@ impl Tool for AccessControlTool {
       format!(
         "**Access Control Analysis:**\n\nFound {} access control issue(s):\n\n{}",
         findings.len(),
-        findings.iter().map(|f| format!("- {}", f)).collect::<Vec<_>>().join("\n")
+        findings
+          .iter()
+          .map(|f| format!("- {}", f))
+          .collect::<Vec<_>>()
+          .join("\n")
       )
     };
 
-    let confidence = if vulnerability_type.is_some() { 0.85 } else { 0.60 };
+    let confidence = if vulnerability_type.is_some() {
+      0.85
+    } else {
+      0.60
+    };
 
     Ok(ToolSignal {
       id: "AccessControlTool#1".to_string(),
@@ -395,7 +471,10 @@ impl Tool for ReflectionTool {
        Analysis to review:\n{}", input
     );
 
-    let response = self.compute.infer_with_max_tokens(&prompt, Some(256)).await?;
+    let response = self
+      .compute
+      .infer_with_max_tokens(&prompt, Some(256))
+      .await?;
 
     // Parse structured response
     let verdict = if response.contains("CONFIRMED") {
@@ -417,7 +496,8 @@ impl Tool for ReflectionTool {
 
     let evidence = format!(
       "**Reflection (0G Compute self-critique):**\n\nVerdict: {}\n\n{}",
-      verdict, response.trim()
+      verdict,
+      response.trim()
     );
 
     Ok(ToolSignal {

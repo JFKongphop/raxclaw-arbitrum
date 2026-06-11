@@ -12,28 +12,24 @@ readme = "README.md"
 keywords = ["security", "defi", "smart-contracts", "vulnerability", "rag"]
 categories = ["cryptography::cryptocurrencies", "development-tools", "web-programming"]
 exclude = [
-    "0g-cli",
-    "target/",
-    "reports/",
-    ".DS_Store",
-    "Dockerfile",
-    "agent_analyze.sh",
+  "0g-cli",
+  "target/",
+  "reports/",
+  ".DS_Store",
+  "Dockerfile",
+  "agent_analyze.sh",
 ]
 
 [lib]
 path = "src/lib.rs"
 
-# [[bin]]
-# name = "api"
-# path = "src/api.rs"
+[[bin]]
+name = "ws_server"
+path = "src/bin/ws_server.rs"
 
-# [[bin]]
-# name = "api_step9_9"
-# path = "src/api_step9_9.rs"
-
-# [[bin]]
-# name = "api_0g_storage"
-# path = "src/api_0g_storage.rs"
+[[bin]]
+name = "ws_client"
+path = "src/bin/ws_client.rs"
 
 [dependencies]
 tokio          = { version = "1",    features = ["full"] }
@@ -45,7 +41,7 @@ regex          = "1"
 chrono         = { version = "0.4",  features = ["clock"] }
 anyhow         = "1"
 urlencoding    = "2"
-axum           = { version = "0.7", features = ["macros"] }
+axum           = { version = "0.7", features = ["macros", "ws"] }
 tower-http     = { version = "0.5", features = ["cors"] }
 ethers         = { version = "2.0", features = ["abigen", "ws"] }
 hex            = "0.4"
@@ -56,3 +52,4 @@ futures        = "0.3"
 md5            = "0.7"
 qdrant-client  = "1"
 alloy          = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.24"
