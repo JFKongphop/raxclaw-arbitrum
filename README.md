@@ -7,6 +7,13 @@
 [![Docker](https://img.shields.io/badge/deploy-Docker-2496ED)](./backend/Dockerfile)
 [![Fly.io](https://img.shields.io/badge/live-Fly.io-8B5CF6)](https://raxclaw-arbitrum.fly.dev)
 [![Vercel](https://img.shields.io/badge/frontend-Vercel-black)](https://raxclaw-arbitrum.vercel.app)
+[![Demo](https://img.shields.io/badge/watch-demo-red)](https://youtu.be/KCB8SH8YXvo)
+
+---
+
+## 🎥 Demo Video
+
+[![RAXC Demo](https://img.youtube.com/vi/KCB8SH8YXvo/0.jpg)](https://youtu.be/KCB8SH8YXvo)
 
 ---
 
