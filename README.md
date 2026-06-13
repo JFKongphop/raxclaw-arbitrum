@@ -10,6 +10,36 @@
 
 ---
 
+## The Problem, The Gap, The Solution
+
+![DeFi Exploit Losses by Year](docs/exploit-chart.jpg)
+
+```
+DEFI EXPLOIT LOSSES BY YEAR
+
+2017  $30M     ▏
+2018  $140M    ▍
+2020  $20M     ▏
+2021  $124M    ▍
+2022  $206M    ▌
+2023  $444M    ▋
+2024  $1.4B    ██████▌
+2025  $1.8B    █████████ ← Worst year ever
+
+474 confirmed exploits · $4.1B total · $11.2M average per incident
+```
+
+### 🔴 The Problem
+DeFi protocols are bleeding. In 2025 alone, exploits stole 1.8 billion dollars across the ecosystem. Traditional audits cost $10-50K per contract, take weeks, and rely entirely on human review — one missed line means millions lost.
+
+### 🟡 The Gap
+AI-powered security scanners exist, but they're mostly ChatGPT wrappers. A single LLM hallucinates findings, can't prove its results, and leaves zero permanent record. You're trusting a black box with user funds. That's not security — that's gambling.
+
+### 🟢 The Solution — RAXC
+RAXC is not an LLM. It's a **deterministic orchestrator** — 8 parallel analysis tools feed into a consensus engine, a consistency gatekeeper blocks invalid decisions, and every result is cryptographically proved with a replay ID and trace hash. The full audit report is written permanently on-chain via Stylus (Rust → WASM) on Arbitrum Sepolia. Same input, same output, every time. Verifiable forever.
+
+---
+
 ### ⚔️ Not Just Another Auditor
 
 RAXC is not a ChatGPT wrapper. It's a **sovereign execution engine** with a deterministic 13-phase pipeline:
