@@ -147,7 +147,7 @@ export function DownloadSection() {
           </div>
           {[
             { prompt: '$ ', code: 'git clone https://github.com/JFKongphop/raxclaw-arbitrum', color: 'var(--text-muted)' },
-            { prompt: '$ ', code: 'cd raxc-0g-agent-framework && pnpm install && pnpm build:all', color: 'var(--text-muted)' },
+            { prompt: '$ ', code: 'cd raxclaw-arbitrum && pnpm install && pnpm build:all', color: 'var(--text-muted)' },
             { prompt: '$ ', code: './dist/raxclaw run', color: 'var(--cyan)' },
             { prompt: '$ ', code: './dist/raxclaw run --file MyContract.sol', color: 'var(--cyan)' },
             { prompt: '$ ', code: './dist/raxclaw list', color: 'var(--cyan)' },
