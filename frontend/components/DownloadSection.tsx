@@ -2,7 +2,7 @@ const PLATFORMS = [
   {
     os: 'Prerequisites',
     sub: 'Node.js 18+ · Rust · pnpm',
-    cmd: 'git clone https://https://github.com/JFKongphop/raxclaw-arbitrum',
+    cmd: 'git clone https://github.com/JFKongphop/raxclaw-arbitrum',
     alt: 'cd raxc-0g-agent-framework',
     icon: '📦',
   },
