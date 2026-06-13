@@ -7,6 +7,8 @@ Usage:
     RAXC_CONTRACT_FILE=path.sol bun run src/bin/ws-client.ts
 */
 
+/// <reference types="bun" />
+
 import * as fs from "fs";
 
 const WS_URL = "ws://localhost:3001/ws";

@@ -12,6 +12,8 @@ Run:
     bun run src/bin/ws-server.ts
 */
 
+/// <reference types="bun" />
+
 import { Hono } from "hono";
 import { createBunWebSocket } from "hono/bun";
 
