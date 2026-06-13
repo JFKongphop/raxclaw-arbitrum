@@ -65,6 +65,96 @@ Phase 12 → Markdown report + on-chain storage (Stylus)
 
 ---
 
+## Orchestrator Engine Architecture
+
+RAXC is built as a **deterministic multi-agent orchestrator** — every component is a specialized engine that feeds into the next, forming a single verifiable audit pipeline with no LLM override.
+
+```mermaid
+graph TD
+    subgraph "13-Phase Orchestrator — AgentCore.analyze()"
+        P0["Phase 0: MemoryLayer.retrieveSimilar()"] --> P1
+        P1["Phase 1-2: ToolRegistry.executeAll() — 7 tools parallel"] --> P2
+        P2["Phase 3: SignalNormalizer.normalize()"] --> P3
+        P3["Phase 4: createAgentVotes() → AgentVote[]"] --> P4
+        P4["Phase 5: ConsensusEngine.decide() → DecisionResult"] --> P5
+        P5["Phase 6: RiskScoringEngine.generateReport() → IntelligenceReport"] --> P6
+        P6["Phase 7: AttackSimulationEngine.simulate() → AttackSimulation"] --> P7
+        P7["Phase 8: GraphConstructionEngine.build() → attack DAG"] --> P8
+        P8["Phase 9: ConsistencyEngineVerifier.verify() → ConsistencyCheck"] --> P9
+        P9["Phase 10: FinalDecisionEngine.decide() → FinalDecision"] --> P10
+        P10["Phase 11: AttestationEngine.attest() → AttestationProof"] --> P11
+        P11["Phase 12: ReflectionTool self-critique"] --> P12
+        P12["Phase 13: ReportEngine.toMarkdown() + MemoryLayer.storeAnalysis()"]
+    end
+
+    P9 -->|GATE CLOSED if consistency < 50%| ABORT["❌ Decision Blocked"]
+    P9 -->|GATE OPEN| P10
+```
+
+### Core Classes (agent.ts — 2,016 lines)
+
+| Class | Role | Key Method |
+|---|---|---|
+| `ToolRegistry` | Pluggable tool system | `register()` / `executeAll()` |
+| `SignalNormalizer` | Filters noise, locks precision | `normalize()` / `lockConfidence()` |
+| `SeverityLock` | Deterministic severity mapping | `enforce()` |
+| `ConsensusEngine` | Weighted multi-agent voting | `decide()` → `DecisionResult` |
+| `RiskScoringEngine` | Risk formula: 0.35×severity + 0.25×confidence + 0.2×agreement + 0.2×similarity | `calculate()` / `generateReport()` |
+| `AttackSimulationEngine` | 4 simulation types (Reentrancy, AccessControl, FlashLoan, Generic) | `simulate()` |
+| `GraphConstructionEngine` | Deterministic attack DAG | `build()` |
+| `ConsistencyEngineVerifier` | **4-way gatekeeper** — blocks invalid decisions | `verify()` → `ConsistencyCheck` |
+| `ConfidenceEngine` | **SINGLE SOURCE OF TRUTH** for confidence | `calculate()` |
+| `FinalDecisionEngine` | **SINGLE AUTHORITY** — no LLM/tool override | `decide()` → `FinalDecision` |
+| `AttestationEngine` | Cryptographic proof + replay | `attest()` → `AttestationProof` |
+| `ReportEngine` | Markdown with 17 standardized sections | `toMarkdown()` |
+| `MemoryLayer` | On-chain Stylus persistence | `storeAnalysis()` / `retrieveSimilar()` |
+| `AgentCore` | **13-phase orchestration** | `analyze()` |
+
+### Key Interfaces
+
+| Interface | Purpose |
+|---|---|
+| `Tool` | Contract for pluggable analysis tools: `name()` + `execute()` |
+| `ToolSignal` | Structured ground truth: `vulnerability`, `severity`, `confidence`, `evidence` |
+| `AgentVote` | Multi-agent vote: `agentName`, `vulnerability`, `confidence`, `reasoning` |
+| `DecisionResult` | Consensus output: `vulnerabilityFound`, `primaryVulnerability`, `riskLevel`, `confidence` |
+| `IntelligenceReport` | Risk scoring output: `riskScore`, `exploitabilityScore`, `toolAgreement`, `attackLikelihood` |
+| `AttackSimulation` | Complete attack model: `executionPath`, `stateTransitions`, `attackerModel`, `exploitVerdict` |
+| `FinalDecision` | Single authority output: `finalVerdict`, `finalConfidence`, `finalRiskScore` |
+| `AttestationProof` | Verifiable proof: `replayId`, `seed`, `executionTraceHash`, `timestamp` |
+| `AnalysisResult` | Complete audit output: decision + signals + simulation + graph + attestation + markdown |
+
+### Authority Chain
+
+```
+ToolRegistry (pluggable)      → Raw signals
+        ↓
+SignalNormalizer              → Filtered signals
+        ↓
+ConsensusEngine               → DecisionResult
+        ↓
+RiskScoringEngine             → IntelligenceReport
+        ↓
+AttackSimulationEngine        → AttackSimulation
+        ↓
+GraphConstructionEngine       → Attack DAG
+        ↓
+ConsistencyEngineVerifier     → GATEKEEPER (blocks if score < 50%)
+        ↓
+ConfidenceEngine              → SINGLE SOURCE OF TRUTH
+        ↓
+FinalDecisionEngine           → SINGLE AUTHORITY (no LLM override)
+        ↓
+AttestationEngine             → Cryptographic proof
+        ↓
+ReportEngine + MemoryLayer    → Markdown + On-chain storage
+```
+
+❌ **NO module can override `FinalDecisionEngine`** — not tools, not agents, not LLMs.  
+✅ **Every execution is deterministic** — same input always produces same output, replay ID, and trace hash.
+
+---
+
 ## On-Chain Contracts (Stylus / Rust)
 
 ### `AgentMemory` — Long-Context Memory
@@ -103,9 +193,9 @@ raxclaw-arbitrum/
 │   │   └── audit_report.rs   # AuditReport contract
 │   └── Cargo.toml
 │
-├── backend-typescript/        # WebSocket server + agent framework
+├── backend/                   # TypeScript WebSocket server + agent framework
 │   ├── src/
-│   │   ├── agent.ts           # AgentCore, 13 engines, ReportEngine
+│   │   ├── agent.ts           # AgentCore, 13 engines, ReportEngine (2,016 lines)
 │   │   ├── tools.ts           # 7 analysis tools
 │   │   ├── openai-client.ts   # GPT-4o-mini interface
 │   │   ├── qdrant-storage.ts  # Qdrant HNSW vector search
@@ -120,7 +210,13 @@ raxclaw-arbitrum/
 │   ├── docker-compose.yml
 │   └── .env.example
 │
-└── backend/                   # [Legacy] Original Rust backend
+├── dist/                       # Compiled CLI
+│   ├── raxclaw.mjs            # 1.7MB bundled ESM
+│   └── raxclaw                # Shell entry point
+│
+├── build.cjs                  # esbuild bundler config
+├── raxclaw.tsx                # Ink/React CLI source
+└── reports/                   # Generated audit reports
 ```
 
 ---
