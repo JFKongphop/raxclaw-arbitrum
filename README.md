@@ -1,6 +1,6 @@
 # RAXC — Autonomous Exploit Intelligence Core
 
-> **A deterministic multi-agent orchestrator that scans smart contracts for vulnerabilities, simulates attacks, cryptographically proves every result, and writes immutable audit reports on-chain. No LLM override. No hallucinations. Verifiable forever.**
+> **A deterministic multi-agent orchestrator that scans smart contracts for vulnerabilities, simulates attacks, cryptographically proves every result, and writes immutable audit reports on-chain via Stylus (Rust → WASM) on Arbitrum Sepolia. No LLM override. No hallucinations. Verifiable forever.**
 
 [![TypeScript](https://img.shields.io/badge/backend-TypeScript-blue)](./backend)
 [![Stylus](https://img.shields.io/badge/contracts-Rust%20Stylus-orange)](./stylus)
@@ -21,7 +21,7 @@ RAXC is not a ChatGPT wrapper. It's a **sovereign execution engine** with a dete
 - **Confidence Engine** is the SINGLE SOURCE OF TRUTH — no module computes confidence independently
 - **Final Decision Engine** is the SINGLE AUTHORITY — tools, agents, and LLMs CANNOT override it
 - **Attestation Engine** produces a cryptographic replay ID + execution trace hash for every audit
-- **On-chain proof** written to Stylus contracts on Arbitrum Sepolia — immutable, verifiable, permanent
+- **On-chain proof** written to Stylus contracts on Arbitrum Sepolia — immutable, verifiable, permanent. Built in Rust, compiled to WASM, running natively on Arbitrum's high-performance execution layer. No Solidity. No gas hacks. Pure Stylus.
 
 The result? Every audit comes with a **replay ID** and **trace hash** that prove the exact same input always produces the exact same output. No black box. No trust required.
 
@@ -227,7 +227,9 @@ ReportEngine + MemoryLayer    → Markdown + On-chain storage
 
 ---
 
-## On-Chain Contracts (Stylus / Rust)
+## On-Chain Contracts (Stylus — Rust → WASM on Arbitrum)
+
+> Unlike Solidity contracts, RAXC's on-chain logic runs on **Stylus** — Arbitrum's native WASM execution engine. Contracts are written in Rust, compiled to WebAssembly, and execute at near-native speed with significantly lower gas costs. No EVM bytecode. No Solidity limitations.
 
 ### `AgentMemory` — Long-Context Memory
 
