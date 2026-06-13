@@ -130,7 +130,7 @@ export function HeroSection() {
             View Audit Explorer
           </a>
           <a
-            href="https://github.com/JFKongphop/raxc-0g-agent-framework"
+            href="https://github.com/JFKongphop/raxclaw-arbitrum"
             className="btn btn-ghost"
             style={{ fontSize: 15, padding: '13px 30px' }}
             target="_blank"

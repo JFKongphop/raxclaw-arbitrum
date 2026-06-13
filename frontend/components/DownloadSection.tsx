@@ -2,7 +2,7 @@ const PLATFORMS = [
   {
     os: 'Prerequisites',
     sub: 'Node.js 18+ · Rust · pnpm',
-    cmd: 'git clone https://github.com/JFKongphop/raxc-0g-agent-framework',
+    cmd: 'git clone https://https://github.com/JFKongphop/raxclaw-arbitrum',
     alt: 'cd raxc-0g-agent-framework',
     icon: '📦',
   },
@@ -146,7 +146,7 @@ export function DownloadSection() {
             Quick Start
           </div>
           {[
-            { prompt: '$ ', code: 'git clone https://github.com/JFKongphop/raxc-0g-agent-framework', color: 'var(--text-muted)' },
+            { prompt: '$ ', code: 'git clone https://github.com/JFKongphop/raxclaw-arbitrum', color: 'var(--text-muted)' },
             { prompt: '$ ', code: 'cd raxc-0g-agent-framework && pnpm install && pnpm build:all', color: 'var(--text-muted)' },
             { prompt: '$ ', code: './dist/raxclaw run', color: 'var(--cyan)' },
             { prompt: '$ ', code: './dist/raxclaw run --file MyContract.sol', color: 'var(--cyan)' },
@@ -292,7 +292,7 @@ export function DownloadSection() {
           }}
         >
           <a
-            href="https://github.com/JFKongphop/raxc-0g-agent-framework"
+            href="https://github.com/JFKongphop/raxclaw-arbitrum"
             className="btn btn-primary"
             style={{ fontSize: 15, padding: '13px 30px' }}
             target="_blank"
@@ -301,7 +301,7 @@ export function DownloadSection() {
             View on GitHub ↗
           </a>
           <a
-            href="https://github.com/JFKongphop/raxc-0g-agent-framework/blob/main/README.md"
+            href="https://github.com/JFKongphop/raxclaw-arbitrum/blob/main/README.md"
             className="btn btn-secondary"
             style={{ fontSize: 15, padding: '13px 30px' }}
             target="_blank"

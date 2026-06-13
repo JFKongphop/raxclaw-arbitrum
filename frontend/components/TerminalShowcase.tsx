@@ -34,7 +34,7 @@ export function TerminalShowcase() {
                 Download Runtime ↓
               </a>
               <a
-                href="https://github.com/JFKongphop/raxc-0g-agent-framework"
+                href="https://github.com/JFKongphop/raxclaw-arbitrum"
                 className="btn btn-secondary"
                 style={{ fontSize: 14 }}
                 target="_blank"

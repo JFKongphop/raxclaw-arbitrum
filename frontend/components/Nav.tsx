@@ -52,7 +52,7 @@ export function Nav() {
           Download
         </a>
         <a
-          href="https://github.com/JFKongphop/raxc-0g-agent-framework"
+          href="https://github.com/JFKongphop/raxclaw-arbitrum"
           className="btn btn-primary"
           style={{ fontSize: 13, padding: '7px 16px' }}
           target="_blank"
