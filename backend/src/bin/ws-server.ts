@@ -181,6 +181,7 @@ async function runAnalysis(
   send({
     type: "complete",
     reportPath: result.filename,
+    markdown: result.markdown,
     summary: {
       contract: contractName,
       vulnerability_found: result.decision.vulnerabilityFound,
