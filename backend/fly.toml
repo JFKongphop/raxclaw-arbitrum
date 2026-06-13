@@ -1,0 +1,19 @@
+app = "raxclaw-arbitrum"
+primary_region = "ams"
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[http_service]
+auto_start_machines = true
+auto_stop_machines = "off"
+force_https = true
+internal_port = 3_001
+min_machines_running = 0
+processes = ["app"]
+
+[[vm]]
+cpu_kind = "shared"
+cpus = 1
+memory = "1gb"
+memory_mb = 512
