@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "RAXC — autonomous smart contract security auditor on Arbitrum",
-  "packageManager": "pnpm@latest",
+  "packageManager": "pnpm@10.13.1",
   "bin": {
     "raxclaw": "./dist/raxclaw"
   },
