@@ -262,6 +262,9 @@ async function main(): Promise<void> {
   console.log(
     `\x1b[1;35m\x1b[0m  AuditReport TX:     \x1b[94mhttps://sepolia.arbiscan.io/tx/${result.reportTx}\x1b[0m\n`,
   );
+  console.log(
+    `\x1b[1;35m\x1b[0m  RAXCLAW REPORT:     \x1b[94mhttps://raxclaw-arbitrum.vercel.app/tx-report/${result.reportTx}\x1b[0m\n`,
+  );
 
   console.log(
     "\x1b[36m╔══════════════════════════════════════════════════════════════════════════╗\x1b[0m",

@@ -11,7 +11,7 @@ Usage:
 
 import * as fs from "fs";
 
-const WS_URL = process.env["WS_URL"] ?? "ws://localhost:3001/ws";
+const WS_URL = process.env["WS_URL"] ?? "wss://raxclaw-arbitrum.fly.dev/ws";
 const DEFAULT_CONTRACT = `pragma solidity ^0.7.0;
 
 contract DeFiVault {

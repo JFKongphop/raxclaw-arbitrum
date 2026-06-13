@@ -2,33 +2,88 @@
 
 > **AI-powered DeFi smart contract vulnerability scanner using RAG (Retrieval-Augmented Generation) with on-chain audit proof on Arbitrum Sepolia.**
 
-[![TypeScript](https://img.shields.io/badge/backend-TypeScript-blue)](./backend-typescript)
-[![Rust](https://img.shields.io/badge/contracts-Rust%20Stylus-orange)](./stylus)
-[![Docker](https://img.shields.io/badge/deploy-Docker-2496ED)](./backend-typescript/Dockerfile)
+[![TypeScript](https://img.shields.io/badge/backend-TypeScript-blue)](./backend)
+[![Stylus](https://img.shields.io/badge/contracts-Rust%20Stylus-orange)](./stylus)
+[![Docker](https://img.shields.io/badge/deploy-Docker-2496ED)](./backend/Dockerfile)
+[![Fly.io](https://img.shields.io/badge/live-Fly.io-8B5CF6)](https://raxclaw-arbitrum.fly.dev)
+[![Vercel](https://img.shields.io/badge/frontend-Vercel-black)](https://raxclaw-arbitrum.vercel.app)
+
+---
+
+## 🔗 Live Deployments
+
+| Service | URL |
+|---|---|
+| **Frontend** | [raxclaw-arbitrum.vercel.app](https://raxclaw-arbitrum.vercel.app) |
+| **WebSocket API** | `wss://raxclaw-arbitrum.fly.dev/ws` |
+| **AgentMemory** | [0xa56b7ebf77b8cb70ed7f276f1c9fb19d98ddc3c1](https://sepolia.arbiscan.io/address/0xa56b7ebf77b8cb70ed7f276f1c9fb19d98ddc3c1) |
+| **AuditReport** | [0xb30dfe68645217fcba0f29b4cdc515ef558422e2](https://sepolia.arbiscan.io/address/0xb30dfe68645217fcba0f29b4cdc515ef558422e2) |
+
+### 🔐 Latest On-Chain Proof
+
+| Field | Link |
+|---|---|
+| **AgentMemory TX** | [0x516354789ac7090f6e65f8b4fee3424c34ea38aaf87300fafdb3ec4165711e20](https://sepolia.arbiscan.io/tx/0x516354789ac7090f6e65f8b4fee3424c34ea38aaf87300fafdb3ec4165711e20) |
+| **AuditReport TX** | [0x65ce22f4a49a75e6544675cbe0ab969da25830f0234e0d03cf0a05db68a8b740](https://sepolia.arbiscan.io/tx/0x65ce22f4a49a75e6544675cbe0ab969da25830f0234e0d03cf0a05db68a8b740) |
+| **Full Report** | [raxclaw-arbitrum.vercel.app/tx-report/0x65ce22f4a49a75e6544675cbe0ab969da25830f0234e0d03cf0a05db68a8b740](https://raxclaw-arbitrum.vercel.app/tx-report/0x65ce22f4a49a75e6544675cbe0ab969da25830f0234e0d03cf0a05db68a8b740) |
 
 ---
 
 ## Architecture
 
-```mermaid
-graph TD
-    subgraph Client
-        CLI["ws-client.ts"] --> WS["ws-server.ts"]
-        Frontend["Any WebSocket client"] --> WS
-    end
-
-    subgraph "Backend (TypeScript / Bun)"
-        WS --> AgentCore["AgentCore — 13-Phase Pipeline"]
-        AgentCore --> Tools["7 Analysis Tools"]
-        AgentCore --> OpenAI["OpenAI GPT-4o-mini"]
-        AgentCore --> Qdrant["Qdrant Vector DB"]
-        AgentCore --> Stylus["Stylus Contracts"]
-    end
-
-    subgraph "On-Chain (Arbitrum Sepolia)"
-        Stylus --> AgentMemory["AgentMemory.sol"]
-        Stylus --> AuditReport["AuditReport.sol"]
-    end
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        raxclaw CLI (Ink/React)                      │
+│            run │ analyze │ list │ show │ agent │ health             │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │ spawns
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      skills/raxc-security/run.sh                    │
+│               (all env baked in — zero-config for users)            │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │ exec
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              backend/examples/agent-example.ts                      │
+│                  RAXC Cognition Engine (TypeScript)                 │
+│                                                                     │
+│  1. loadEnv()              Load baked config                        │
+│  2. QdrantStorageClient    Query 782 exploits via HNSW (<10ms)      │
+│  3. buildOpenAiClient()    OpenAI GPT-4o-mini endpoint              │
+│  4. AgentCore::new()       Assemble multi-tool agent                │
+│     ├─ RaxcAnalyzer        RAG semantic similarity                  │
+│     ├─ RaxcAnalyzerRemote  Secondary RAG confirmation               │
+│     ├─ PatternDetectorTool CEI / reentrancy patterns                │
+│     ├─ GasAnalyzerTool     Gas griefing vectors                     │
+│     ├─ FlashLoanTool       Flash loan attack paths                  │
+│     ├─ AccessControlTool   Owner / role checks                      │
+│     ├─ ReflectionTool      Self-review loop (OpenAI critique)       │
+│     └─ MemoryTool          Persistent cognition memory              │
+│  5. Parallel execution     All 8 tools run concurrently             │
+│  6. SignalNormalizer       Filter noise, lock precision             │
+│  7. ConsensusEngine        Weighted multi-agent voting              │
+│  8. AttackSimulationEngine VM-like exploit execution                │
+│  9. GraphConstructionEngine Deterministic attack DAG                │
+│  10. ConsistencyEngine     Gatekeeper — blocks invalid decisions    │
+│  11. ConfidenceEngine      SINGLE SOURCE OF TRUTH                   │
+│  12. FinalDecisionEngine   SINGLE AUTHORITY — no LLM override       │
+│  13. AttestationEngine     Cryptographic replay ID + trace hash     │
+│  14. MemoryLayer           Store result to Stylus contracts on-chain│
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │
+              ┌───────────────────┴──────────────────────┐
+              ▼                                          ▼
+┌───────────────────────────────┐   ┌─────────────────────────────────┐
+│      Arbitrum Sepolia         │   │          Qdrant Cloud           │
+│         (Chain 421614)        │   │  (782 exploits, 2 collections)  │
+│                               │   │                                 │
+│      AgentMemory (Stylus)     │   │      HNSW-indexed search        │
+│   0xa56b7ebf... Token-based   │   │       cosine similarity         │
+│                               │   │                                 │
+│      AuditReport (Stylus)     │   │  defi_cases + defi_protocols    │
+│   0xb30dfe68... Task-based    │   │      68fe2ddf.cloud.qdrant      │
+└───────────────────────────────┘   └─────────────────────────────────┘
 ```
 
 ---
