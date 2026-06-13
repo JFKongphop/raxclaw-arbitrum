@@ -1,12 +1,29 @@
 # RAXC — Autonomous Exploit Intelligence Core
 
-> **AI-powered DeFi smart contract vulnerability scanner using RAG (Retrieval-Augmented Generation) with on-chain audit proof on Arbitrum Sepolia.**
+> **A deterministic multi-agent orchestrator that scans smart contracts for vulnerabilities, simulates attacks, cryptographically proves every result, and writes immutable audit reports on-chain. No LLM override. No hallucinations. Verifiable forever.**
 
 [![TypeScript](https://img.shields.io/badge/backend-TypeScript-blue)](./backend)
 [![Stylus](https://img.shields.io/badge/contracts-Rust%20Stylus-orange)](./stylus)
 [![Docker](https://img.shields.io/badge/deploy-Docker-2496ED)](./backend/Dockerfile)
 [![Fly.io](https://img.shields.io/badge/live-Fly.io-8B5CF6)](https://raxclaw-arbitrum.fly.dev)
 [![Vercel](https://img.shields.io/badge/frontend-Vercel-black)](https://raxclaw-arbitrum.vercel.app)
+
+---
+
+### ⚔️ Not Just Another Auditor
+
+RAXC is not a ChatGPT wrapper. It's a **sovereign execution engine** with a deterministic 13-phase pipeline:
+
+- **8 analysis tools** run in parallel — static analysis, RAG semantic search, access control, flash loan detection
+- **Consensus Engine** aggregates weighted votes — the LLM is just one input, not the authority
+- **Attack Simulator** generates VM-like execution paths with state transitions and graph-bound steps
+- **Consistency Gatekeeper** blocks any decision where simulation, graph, and tool signals don't align
+- **Confidence Engine** is the SINGLE SOURCE OF TRUTH — no module computes confidence independently
+- **Final Decision Engine** is the SINGLE AUTHORITY — tools, agents, and LLMs CANNOT override it
+- **Attestation Engine** produces a cryptographic replay ID + execution trace hash for every audit
+- **On-chain proof** written to Stylus contracts on Arbitrum Sepolia — immutable, verifiable, permanent
+
+The result? Every audit comes with a **replay ID** and **trace hash** that prove the exact same input always produces the exact same output. No black box. No trust required.
 
 ---
 
@@ -288,7 +305,7 @@ raxclaw-arbitrum/
 ### 1. Configure Environment
 
 ```bash
-cd backend-typescript
+cd backend
 cp .env.example .env
 # Edit .env with your keys
 ```
