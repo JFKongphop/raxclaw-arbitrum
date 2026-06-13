@@ -1,4 +1,10 @@
-# Stylus Multi-Contract Workspace
+# RAXC Stylus Contracts — On-Chain Audit Trail
+
+> **Stylus smart contracts for persistent AI agent memory and immutable audit reports.**
+> **Part of the [RAXC Autonomous Exploit Intelligence Core](../README.md).**
+
+[![Stylus](https://img.shields.io/badge/Stylus-Rust%20→%20WASM-orange)](https://arbitrum.io/stylus)
+[![Arbitrum](https://img.shields.io/badge/Arbitrum-Sepolia-blue)](https://sepolia.arbiscan.io)
 
 Arbitrum Stylus contracts written in Rust. Three contracts share a single crate,
 selected at build/deploy time via feature flags.
@@ -9,17 +15,43 @@ selected at build/deploy time via feature flags.
 
 | Contract | Feature flag | Description |
 |---|---|---|
-| `Counter` | *(default)* | Simple on-chain counter |
 | `RaxcAgentMemory` | `agent-memory` | NFT-based persistent AI agent memory |
 | `RaxcAuditReport` | `audit-report` | On-chain smart-contract audit reports |
+| `Counter` | *(default)* | Simple on-chain counter (test) |
 
 ### Deployed — Arbitrum Sepolia
 
 | Contract | Address |
 |---|---|
-| Counter | `0xa018a255881e0525831df7bcdf9a03d1b06e1790` |
 | AgentMemory | `0xdef586e63cf2f20cbe9f055b738cd4ceda273900` |
 | AuditReport | `0x6c46b355a1178e2e9f8c5c2d8dab81e061d67434` |
+| Counter | `0xa018a255881e0525831df7bcdf9a03d1b06e1790` |
+
+### `AgentMemory` — Long-Context Memory
+
+Stores JSON audit summaries on-chain with cryptographic hashing per entry.
+
+| Function | Description |
+|---|---|
+| `mint(to, agent)` → `tokenId` | Mint new agent identity |
+| `pushMemory(tokenId, summaryJson, description)` | Store audit summary |
+| `getMemoryData(tokenId, index)` → `bytes` | Read entry by index |
+| `memoryCount(tokenId)` → `uint256` | Total entries for a token |
+
+**Authorization**: Only token owner or authorized agent can push.
+**Storage**: Flat key derivation `keccak256(token_id, index)` for sparse maps.
+
+### `AuditReport` — Immutable Audit Trail
+
+Stores full markdown security reports on-chain. Each report is hashed and
+timestamped. Risk levels: `0=None | 1=Low | 2=Medium | 3=High | 4=Critical`.
+
+| Function | Description |
+|---|---|
+| `createAudit(contractName)` → `taskId` | Create new audit task |
+| `finalizeAudit(taskId, riskLevel, confidence, vulnType, reportMarkdown)` | Store full report |
+| `getReport(taskId)` → `bytes` | Read report by task ID |
+| `recordCount()` → `uint256` | Total audits on record |
 
 ---
 
