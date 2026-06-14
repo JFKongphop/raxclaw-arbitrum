@@ -140,6 +140,12 @@ The result? Every audit comes with a **replay ID** and **trace hash** that prove
 └───────────────────────────────┘   └─────────────────────────────────┘
 ```
 
+> **RAG Knowledge Base**: The 782 exploit vectors in Qdrant are sourced from
+> [DeFiHackLabs](https://github.com/SunWeb3Sec/DeFiHackLabs) and
+> [DeFiVulnLabs](https://github.com/SunWeb3Sec/DeFiVulnLabs) —
+> the most comprehensive open-source repositories of DeFi exploit
+> reproductions and vulnerability labs, maintained by [SunWeb3Sec](https://github.com/SunWeb3Sec).
+
 ---
 
 ## How It Works — 13-Phase Pipeline
